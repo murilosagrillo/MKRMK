@@ -98,11 +98,30 @@ rmk <- function(n,alpha,beta){
   
   res<-optim(chute, l_theta, method="BFGS",#x=x,
              control=list(fnscale=-1, pgtol=1e-20, maxit=200),gr=gr)#, silent=T)
-  # if(class(res)=="try-error" || res$conv != 0 ||res$par[2]>.999||res$par[2]<.07) # a classe dos objetos que cont?m o erro,
   
   alpha_emv<-res$par[1]
   beta_semi<--(n/sum(log(1-exp(res$par[1]-res$par[1]/y))))
+
+  #intervalos de confiança
   
+  alpha2<-0.05
+  
+  aa=-(n/alpha_emv^2)-(((beta_semi-1)/2)*sum(((y-1)^2)/((y^2)*(cosh(alpha_emv-alpha_emv/y)-1))))
+  ab=ba=exp(alpha_emv)*sum((y-1)*(1/y)*1/(exp(alpha_emv)-exp(alpha_emv/y)))
+  bb=-n/beta_semi^2
+  invalphaalpha<--((bb)/((-ab*ba)+(aa*bb))) #variancia alpha aprox
+  invbetabeta<--((aa)/((-ab*ba)+(aa*bb))) #variancia beta aprox
+  
+  #para alpha
+  Lialpha=alpha_emv-qnorm(1-alpha2/2)*sqrt(invalphaalpha)
+  Lsalpha=alpha_emv-qnorm(alpha2/2)*sqrt(invalphaalpha)
+  
+  #para beta
+  Libeta=beta_semi-qnorm(1-alpha2/2)*sqrt(invbetabeta)
+  Lsbeta=beta_semi-qnorm(alpha2/2)*sqrt(invbetabeta)
+  
+  ICalpha=c(Lialpha, Lsalpha)
+  ICbeta=c(Libeta, Lsbeta)
   
   fdpMK_densidade<-function(y){
     alpha_emv*beta_semi*exp(alpha_emv-alpha_emv/y)*(1-exp(alpha_emv-alpha_emv/y))^(beta_semi-1)*y^(-2)  
@@ -143,11 +162,13 @@ rmk <- function(n,alpha,beta){
   estim <- emvs
   g$estimativas <- estim
   g$convergencia <- res$conv
+  g$ICalpha95<- ICalpha
+  g$ICbeta95<- ICbeta
   # g$valor<-res$value
   data<-y
-  hist(data,nclass = 10, freq = F,xlim=c(0.001,1),ylim=c(0.001,5))
+  hist(data,nclass = 20, freq = F,xlim=c(0,1),ylim=c(0,5))
   # plot(density(y),xlim=c(0.001,max(y)))
-  curve(fdpMK_densidade,xlim=c(0.001,1),ylim=c(0.001,.5),lty=3,add=T)
+  curve(fdpMK_densidade,xlim=c(0,1),ylim=c(0,.5),lty=3,add=T)
   # g$chute<-chute
   g$AIC<-AIC
   # g$AICc<-AICc
@@ -158,8 +179,6 @@ rmk <- function(n,alpha,beta){
   g$KS<- KS
   return(g)
 }
-
-# mkfit((1-log(rkumar(210,0.1,.3)))^(-1))
 
 #------------------------------------------------------------------
 #Reflected Modified Kumaraswamy (RMK) distribution functions#
@@ -176,8 +195,6 @@ drmk <- Vectorize(function(z,alpha,beta,log = FALSE){
   return(val)
 })
 
- # drmk(0.7,0.3,0.4)
-
 #------------------------------------------------------------------
 # Quantile function RMK
 #------------------------------------------------------------------
@@ -186,8 +203,6 @@ qrmk <- Vectorize(function(u,alpha,beta){
   val <-  log(1-u^(1/beta))/(log(1-u^(1/beta))-alpha)
   return(val)
 })
-
- # qrmk(0.5,1.5,1.3)
 
 #------------------------------------------------------------------
 # CDF RMK
@@ -199,8 +214,6 @@ prmk <- Vectorize(function(q,alpha,beta,log.p = FALSE){
   return(val)
 })
 
- # prmk(0.3707142,1.5,1.3)
-
 #------------------------------------------------------------------
 # Random number generation RMK
 #------------------------------------------------------------------
@@ -210,8 +223,6 @@ rrmk <- function(n,alpha,beta){
   val <- log(1-u^(1/beta))/(log(1-u^(1/beta))-alpha)
   return(val)
 }
-
- rrmk(100,0.3,0.9)
 
 #------------------------------------------------------------------
 # RMK Estimation MK
@@ -263,6 +274,28 @@ rrmk <- function(n,alpha,beta){
    alpha_emv<-res$par[1]
    beta_semi<--(n/sum(log(1-exp(res$par[1]-res$par[1]/(1-z)))))
    
+   #intervalos de confiança
+   
+   alpha2<-0.05
+   y=1-z
+   
+   aa=-(n/alpha_emv^2)-(((beta_semi-1)/2)*sum(((y-1)^2)/((y^2)*(cosh(alpha_emv-alpha_emv/y)-1))))
+   ab=ba=exp(alpha_emv)*sum((y-1)*(1/y)*1/(exp(alpha_emv)-exp(alpha_emv/y)))
+   bb=-n/beta_semi^2
+   invalphaalpha<--((bb)/((-ab*ba)+(aa*bb))) #variancia alpha aprox
+   invbetabeta<--((aa)/((-ab*ba)+(aa*bb))) #variancia beta aprox
+   
+   #para alpha
+   Lialpha=alpha_emv-qnorm(1-alpha2/2)*sqrt(invalphaalpha)
+   Lsalpha=alpha_emv-qnorm(alpha2/2)*sqrt(invalphaalpha)
+   
+   #para beta
+   Libeta=beta_semi-qnorm(1-alpha2/2)*sqrt(invbetabeta)
+   Lsbeta=beta_semi-qnorm(alpha2/2)*sqrt(invbetabeta)
+   
+   ICalpha=c(Lialpha, Lsalpha)
+   ICbeta=c(Libeta, Lsbeta)
+   
    
    fdpRMK_densidade<-function(z){
      alpha_emv*beta_semi*exp(z* alpha_emv/(z-1))*(1-exp(z* alpha_emv/(z-1)))^(beta_semi-1)*(z-1)^(-2)
@@ -304,11 +337,13 @@ rrmk <- function(n,alpha,beta){
    estim <- emvs
    g$estimativas <- estim
    g$convergencia <- res$conv
+   g$ICalpha95<- ICalpha
+   g$ICbeta95<- ICbeta
    # g$valor<-res$value
    data<-z
-   hist(data,nclass = 10, freq = F,xlim=c(0.001,1),ylim=c(0.001,5))
+   hist(data,nclass = 20, freq = F,xlim=c(0,1),ylim=c(0,5))
    # plot(density(y),xlim=c(0.001,max(y)))
-   curve(fdpRMK_densidade,xlim=c(0.001,1),ylim=c(0.001,.5),lty=3,add=T)
+   curve(fdpRMK_densidade,xlim=c(0,1),ylim=c(0,.5),lty=3,add=T)
    # g$chute<-chute
    g$AIC<-AIC
    # g$AICc<-AICc
@@ -319,7 +354,5 @@ rrmk <- function(n,alpha,beta){
    g$KS<- KS
    return(g)
  }
-
-# rmkfit(1-(1-log(rkumar(210,0.1,.3)))^(-1))
 
  
