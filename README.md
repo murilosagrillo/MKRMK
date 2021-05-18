@@ -24,7 +24,7 @@ This repository contains the R implementations of MK and RMK distribution. The "
   <li>probability density function (drmk);</li>
   <li>cumulative density function (prmk);</li>
   <li>quantile function (qrmk) and;</li>
-  <li>function for generating pseudo-random numbers (rrmk) of the MK distribution.</li>
+  <li>function for generating pseudo-random numbers (rrmk) of the RMK distribution.</li>
 </ul>  
 
 In addition, the mkfit and rmkfit functions are available for parameter estimation of MK and RMK distributions, respectively. These functions return the maximum likelihood estimates of the parameters and its confidence intervals, a histogram of the data with the fit distribution, and goodness-of-fit measures useful for model selection.
